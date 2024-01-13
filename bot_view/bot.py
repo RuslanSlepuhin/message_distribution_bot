@@ -1,7 +1,8 @@
-import asyncio
 import configparser
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.utils import executor
 from bot_view.bot_methods import Methods
 from variables import variables
@@ -18,8 +19,38 @@ class HorecaBot:
         self.superusers = config["Admins"]["superuser"].split(",")
         self.admins = config["Admins"]["admin"].split(",")
         self.methods = Methods(self)
+        self.callbacks = []
+        self.receive_distribution_excel = False
+        # self.distribution_message = ''
+        self.distribution_pull_ids = []
+
+    class ChannelForm(StatesGroup):
+        channel = State()
+
+    class DistributionMessageForm(StatesGroup):
+        distribution_message = State()
 
     def bot_handlers(self):
+
+        @self.dp.message_handler(state=self.DistributionMessageForm.distribution_message)
+        async def distribution_message(message: types.Message, state: FSMContext):
+            async with state.proxy() as data:
+                data['distribution_message'] = message.text
+                distribution_message = message.text
+            await state.finish()
+            distribution_result = await self.methods.distribution(id_list=self.distribution_pull_ids, message_text=distribution_message)
+            if distribution_result:
+                await self.bot.send_message(message.chat.id, variables.distribution_was_success)
+            else:
+                await self.bot.send_message(message.chat.id, variables.distribution_was_broken)
+
+        @self.dp.message_handler(state=self.ChannelForm.channel)
+        async def channel(message: types.Message, state: FSMContext):
+            async with state.proxy() as data:
+                data['channel'] = message.text
+                channel = message.text
+            await state.finish()
+            await self.methods.get_external_subscribers(message, channel)
 
         @self.dp.message_handler(commands=['start'])
         async def start(message: types.Message):
@@ -27,24 +58,36 @@ class HorecaBot:
                 await self.bot.send_message(message.chat.id, f"id is {message.chat.id}")
             except Exception as ex:
                 print(ex)
-
             text = "Меню Суперюзера"
-            await self.methods.send_message_inline_keyboard(buttons=variables.superuser_start_buttons, text=text)
-
-
-        @self.dp.message_handler(commands=['subscribers'])
-        async def start(message: types.Message):
-            from bot_view.teleth_bot import TelethBot
-            teleth_bot = TelethBot()
-            client = asyncio.run(teleth_bot.init_bot())
-            asyncio.run(teleth_bot.get_subscribers())
+            self.callbacks = await self.methods.send_message_inline_keyboard(message, buttons=variables.superuser_start_buttons, text=text, row=1)
 
         @self.dp.callback_query_handler()
         async def callbacks(callback: types.CallbackQuery):
-            pass
+            if callback.data in self.callbacks:
+                match callback.data:
+                    case "get_external_subscribers": await self.get_external_subscribers(callback.message)
+                    case "get_own_contacts": await self.methods.get_own_contacts(callback.message)
+                    case "distribution":
+                        await self.bot.send_message(callback.message.chat.id, variables.distribution_message)
+                        self.receive_distribution_excel = True
 
         @self.dp.message_handler(content_types=['text'])
         async def text_message(message):
             pass
 
+        @self.dp.message_handler(content_types=['document'])
+        async def download_doc(message: types.Message):
+            if self.receive_distribution_excel:
+                self.distribution_pull_ids = await self.methods.receive_excel(message)
+                await self.DistributionMessageForm.distribution_message.set()
+                await self.bot.send_message(message.chat.id, variables.distribution_request)
+
+            else:
+                await self.bot.send_message(message.chat.id, variables.restricted_message)
+
         executor.start_polling(self.dp, skip_updates=True)
+
+    async def get_external_subscribers(self, message):
+        await self.ChannelForm.channel.set()
+        await self.bot.send_message(message.chat.id, variables.get_external_subscribers)
+
