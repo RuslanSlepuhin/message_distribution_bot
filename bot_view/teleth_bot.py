@@ -1,5 +1,7 @@
 import pandas as pd
 import configparser
+from variables import variables
+from telethon import functions
 from telethon.sync import TelegramClient, events
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch
@@ -20,14 +22,11 @@ class TelethBot:
 
     async def create_new_session(self):
         await self.client.connect()
-        await self.get_subscribers()
+        await self.get_subscribers("https://t.me/salon_director")
+        # await self.get_my_contacts()
+        # await self.pull_message_to_users(["g", "g"], "Test Text, Sorry)")
+        # return self.client
 
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete(self.get_subscribers())
-        # self.client.disconnect()
-
-        # with TelegramClient('anon', api_id, api_hash) as client:
-        #     client.send_message('me', 'Hello, myself!')
 
     async def get_subscribers(self, channel_name="https://t.me/Rabkova_EV"):
         channel = await self.client.get_entity(channel_name)
@@ -47,9 +46,15 @@ class TelethBot:
             participants_list.extend(participants.users)
             pass
 
-        await self.prepare_excel_dict_data(participants_list, ['id', 'access_hash', 'username', 'first_name', 'last_name', 'mutual_contact', 'phone'], channel_name.split("/")[-1])
+        await self.prepare_excel_dict_data(participants_list, variables.telegram_fields, channel_name.split("/")[-1])
 
-    async def prepare_excel_dict_data(self, participants_list, fields, file_name):
+    async def get_my_contacts(self) -> None:
+        result = await self.client(functions.contacts.GetContactsRequest(
+            hash=0  # Using 0 for hash will fetch all contacts
+        ))
+        await self.prepare_excel_dict_data(result.users, variables.telegram_fields, "My_contacts")
+
+    async def prepare_excel_dict_data(self, participants_list, fields, file_name) -> None:
         user_excel_data = {}
         for user in participants_list:
             for field in fields:
@@ -70,7 +75,7 @@ class TelethBot:
             #     break
         await self.write_to_excel(user_excel_data, file_name)
 
-    async def write_to_excel(self, user_excel_data, file_name, path="media/excel/"):
+    async def write_to_excel(self, user_excel_data, file_name, path="media/excel/") -> None:
         df = pd.DataFrame(
             {
                 'id': user_excel_data['id'],
@@ -87,8 +92,14 @@ class TelethBot:
         file_name = "data.xlsx" if not file_name else file_name + ".xlsx"
         df.to_excel(path + file_name, sheet_name='Sheet1')
         print(f'\nExcel was writting')
+        await self.pull_message_to_users(user_excel_data, "test text, sorry)")
+
+    async def pull_message_to_users(self, user_excel_data:list, message_text:str) -> None:
+        # for user_id in user_excel_data['id']:
+        #     await self.client.send_message(user_id, message_text)
+        #     pass
+        # await self.client.send_message(5502797471, message_text)
         pass
 
-        # await self.send_file_to_user(message, path='excel/excel/excel/followers_statistics.xlsx')
 
 

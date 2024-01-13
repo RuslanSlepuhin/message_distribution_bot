@@ -1,3 +1,4 @@
+import asyncio
 import configparser
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -21,6 +22,13 @@ class HorecaBot:
             except Exception as ex:
                 print(ex)
             pass
+
+        @self.dp.message_handler(commands=['subscribers'])
+        async def start(message: types.Message):
+            from bot_view.teleth_bot import TelethBot
+            teleth_bot = TelethBot()
+            client = asyncio.run(teleth_bot.init_bot())
+            asyncio.run(teleth_bot.get_subscribers())
 
         @self.dp.callback_query_handler()
         async def callbacks(callback: types.CallbackQuery):
