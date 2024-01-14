@@ -21,8 +21,8 @@ class HorecaBot:
         self.methods = Methods(self)
         self.callbacks = []
         self.receive_distribution_excel = False
-        # self.distribution_message = ''
         self.distribution_pull_ids = []
+        self.message = None
 
     class ChannelForm(StatesGroup):
         channel = State()
@@ -38,6 +38,7 @@ class HorecaBot:
                 data['distribution_message'] = message.text
                 distribution_message = message.text
             await state.finish()
+            self.message = message
             distribution_result = await self.methods.distribution(id_list=self.distribution_pull_ids, message_text=distribution_message)
             if distribution_result:
                 await self.bot.send_message(message.chat.id, variables.distribution_was_success)
@@ -54,10 +55,6 @@ class HorecaBot:
 
         @self.dp.message_handler(commands=['start'])
         async def start(message: types.Message):
-            try:
-                await self.bot.send_message(message.chat.id, f"id is {message.chat.id}")
-            except Exception as ex:
-                print(ex)
             text = "Меню Суперюзера"
             self.callbacks = await self.methods.send_message_inline_keyboard(message, buttons=variables.superuser_start_buttons, text=text, row=1)
 
@@ -71,17 +68,12 @@ class HorecaBot:
                         await self.bot.send_message(callback.message.chat.id, variables.distribution_message)
                         self.receive_distribution_excel = True
 
-        @self.dp.message_handler(content_types=['text'])
-        async def text_message(message):
-            pass
-
         @self.dp.message_handler(content_types=['document'])
         async def download_doc(message: types.Message):
             if self.receive_distribution_excel:
                 self.distribution_pull_ids = await self.methods.receive_excel(message)
                 await self.DistributionMessageForm.distribution_message.set()
                 await self.bot.send_message(message.chat.id, variables.distribution_request)
-
             else:
                 await self.bot.send_message(message.chat.id, variables.restricted_message)
 

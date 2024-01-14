@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bot_view.teleth_bot import TelethBot
 from variables import variables
 import pandas as pd
+from helper.file_operations import write_to_excel
 
 class Methods:
 
@@ -14,7 +15,6 @@ class Methods:
         for i in buttons_list:
             buttons.append(InlineKeyboardButton(i, callback_data=buttons_list[i]))
         return buttons
-
 
     async def inline_markup(self, buttons:dict, **kwargs):
         callbacks = list(buttons.values())
@@ -40,10 +40,10 @@ class Methods:
         print(file_path)
         await self.send_file(message, file_path)
 
-    async def send_file(self, message, file_path):
+    async def send_file(self, message, file_path, caption=variables.caption_send_file):
         with open(file_path, 'rb') as file:
             try:
-                await self.main_class.bot.send_document(message.chat.id, file, caption=variables.caption_send_file)
+                await self.main_class.bot.send_document(message.chat.id, file, caption=caption)
             except Exception as ex:
                 await self.main_class.bot.send_message(message.chat.id, ex)
 
@@ -61,20 +61,26 @@ class Methods:
         urllib.request.urlretrieve(f'https://api.telegram.org/file/bot{self.main_class.token}/{fi}', f'{variables.excel_storage_path}{file_name}')
         return await self.parse_excel(file_name)
 
-
     async def parse_excel(self, file_name):
         fields = variables.telegram_fields
         excel_data_df = pd.read_excel(variables.excel_storage_path + file_name, sheet_name='Sheet1')
         excel_dict = {}
         for field in fields:
             excel_dict[field] = excel_data_df[field].tolist()
-        return excel_dict['id']
+        return excel_dict
 
     async def distribution(self, id_list:list, message_text:str):
         teleth = TelethBot()
-        return await teleth.pull_message_to_users(id_list, message_text)
+        response, report_dict = await teleth.pull_message_to_users(id_list, message_text)
+        await self.prepare_report(report_dict)
+        return response
 
-        pass
+    async def prepare_report(self, report_dict):
+        if len(report_dict['id']) > len(report_dict['sending_report']):
+            for i in range(0, len(report_dict['id'])-len(report_dict['sending_report'])):
+                report_dict['sending_report'].append(False)
+        file_path = await write_to_excel(report_dict, variables.sending_report_file_name)
+        await self.send_file(self.main_class.message, file_path, caption="Отчет об отправке сообщений (столбец sending_report)")
 
 
 

@@ -12,4 +12,5 @@ def teleth_bot_init():
     teleth_bot.init_bot()
 
 if __name__ == "__main__":
+    teleth_bot_init()
     tg_bot_init()

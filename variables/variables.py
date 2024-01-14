@@ -14,3 +14,6 @@ restricted_message = "Интересно, но я не знаю что с эти
 distribution_request = "Введи текст для рассылки и отправь его"
 distribution_was_success = "Рассылка прошла успешно"
 distribution_was_broken = "УПС, что-то пошло не так, обратись к разработчику"
+sending_report_file_name = "sending_report"
+sending_limit_counter_limit = 20
+sending_limit_counter_sleep = 15

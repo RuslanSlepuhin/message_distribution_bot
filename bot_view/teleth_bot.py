@@ -1,7 +1,7 @@
 import asyncio
 import random
-
-import pandas as pd
+import re
+from helper.file_operations import write_to_excel
 import configparser
 from variables import variables
 from telethon import functions
@@ -18,18 +18,15 @@ username = config['Telegram']['username']
 
 class TelethBot:
 
-    # def init_bot(self, **kwargs):
-    #     self.client = TelegramClient(username, int(api_id), api_hash)
-    #     with self.client:
-    #         self.client.loop.run_until_complete(self.create_new_session())
-    #
-    # async def create_new_session(self):
-    #     await self.client.connect()
-    #     await self.get_subscribers("https://t.me/salon_director")
-    #     # await self.get_my_contacts()
-    #     # await self.pull_message_to_users(["g", "g"], "Test Text, Sorry)")
-    #     # return self.client
-    #
+    def init_bot(self):
+        self.client = TelegramClient(username, int(api_id), api_hash)
+        with self.client:
+            self.client.loop.run_until_complete(self.create_new_session())
+
+    async def create_new_session(self):
+        await self.client.connect()
+        print("telethon telegram account was started")
+        await self.client.disconnect()
 
     async def get_subscribers(self, channel_name):
         self.client = TelegramClient(username, int(api_id), api_hash)
@@ -39,19 +36,14 @@ class TelethBot:
         filter_user = ChannelParticipantsSearch('')
         offset_user = 0
         limit_user = 100
-        pass
-        participants = []
         participants_list = []
         while True:
-            participants = await self.client(GetParticipantsRequest(
-                channel, filter_user, offset_user, limit_user, hash=0))
+            participants = await self.client(GetParticipantsRequest(channel, filter_user, offset_user, limit_user, hash=0))
             offset_user += limit_user
             print(offset_user)
             if not participants.users:
                 break
             participants_list.extend(participants.users)
-            pass
-
         file_full_path = await self.prepare_excel_dict_data(participants_list, variables.telegram_fields, channel_name.split("/")[-1])
         await self.client.disconnect()
         return file_full_path
@@ -73,7 +65,6 @@ class TelethBot:
             for field in fields:
                 if field not in user_excel_data:
                     user_excel_data[field] = []
-                # print(participants_list.index(user), field)
                 match field:
                     case 'id': user_excel_data[field].append(user.id)
                     case 'access_hash': user_excel_data[field].append(user.access_hash)
@@ -84,42 +75,55 @@ class TelethBot:
                     case 'phone': user_excel_data[field].append(user.phone)
                 pass
             pass
-            # if participants_list.index(user) == 10:
-            #     break
-        file_full_path = await self.write_to_excel(user_excel_data, file_name)
-        return file_full_path
+        return await write_to_excel(user_excel_data, file_name)
 
-    async def write_to_excel(self, user_excel_data, file_name, path="media/excel/") -> None:
-        df = pd.DataFrame(
-            {
-                'id': user_excel_data['id'],
-                'access_hash': user_excel_data['access_hash'],
-                'username': user_excel_data['username'],
-                'first_name': user_excel_data['first_name'],
-                'last_name': user_excel_data['last_name'],
-                'mutual_contact': user_excel_data['mutual_contact'],
-                'phone': user_excel_data['phone'],
-            }
-        )
-        file_name = "data.xlsx" if not file_name else file_name + ".xlsx"
-        file_full_path = path + file_name
-        df.to_excel(file_full_path, sheet_name='Sheet1')
-        print(f'\nExcel was writting')
-        # await self.pull_message_to_users(user_excel_data, "test text, sorry)")
-        return file_full_path
+    # async def write_to_excel(self, user_excel_data, file_name, path="media/excel/") -> None:
+    #     df = pd.DataFrame(
+    #         {
+    #             'id': user_excel_data['id'],
+    #             'access_hash': user_excel_data['access_hash'],
+    #             'username': user_excel_data['username'],
+    #             'first_name': user_excel_data['first_name'],
+    #             'last_name': user_excel_data['last_name'],
+    #             'mutual_contact': user_excel_data['mutual_contact'],
+    #             'phone': user_excel_data['phone'],
+    #         }
+    #     )
+    #     file_name = "data.xlsx" if not file_name else file_name + ".xlsx"
+    #     file_full_path = path + file_name
+    #     df.to_excel(file_full_path, sheet_name='Sheet1')
+    #     print(f'\nExcel was writting')
+    #     return file_full_path
 
-    async def pull_message_to_users(self, user_excel_data, message_text:str) -> bool:
+    async def pull_message_to_users(self, user_excel_data, message_text:str) -> [bool, dict]:
         self.client = TelegramClient(username, int(api_id), api_hash)
         await self.client.connect()
-        # for user_id in user_excel_data['id']:
-        #     await self.client.send_message(user_id, message_text)
-        #     pass
-        user_excel_data = user_excel_data['id'] if type(user_excel_data) is dict and user_excel_data.get('id') else user_excel_data
-        for user in user_excel_data:
-            await self.client.send_message(int(user), message_text)
-            await asyncio.sleep(random.randrange(1, 5))
+        user_excel_data['sending_report'] = []
+        user_excel_data_id = user_excel_data['id'] if type(user_excel_data) is dict and user_excel_data.get('id') else user_excel_data
+        sending_limit_counter = 0
+        for user in user_excel_data_id:
+            try:
+                if user == 5502797471:
+                    a = 9/0
+                await self.client.send_message(int(user), message_text)
+                await asyncio.sleep(random.randrange(1, 4))
+                user_excel_data['sending_report'].append(True)
+                sending_limit_counter += 1
+                print("user_id ", user)
+            except Exception as ex:
+                print("message not was sent to user_id ", user)
+                if "flood control" in str(ex):
+                    print('flood control', ex)
+                    sleep_seconds = re.findall(r"[0-9]+", str(ex))[0] + 10
+                    print('sleep_seconds', sleep_seconds)
+                    await asyncio.sleep(sleep_seconds)
+                user_excel_data['sending_report'].append(False)
+            if sending_limit_counter > variables.sending_limit_counter_limit:
+                await asyncio.sleep(variables.sending_limit_counter_sleep)
+                sending_limit_counter = 0
+
         await self.client.disconnect()
-        return True
+        return True, user_excel_data
 
 
 
