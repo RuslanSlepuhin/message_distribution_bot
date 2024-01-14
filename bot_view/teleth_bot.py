@@ -103,8 +103,6 @@ class TelethBot:
         sending_limit_counter = 0
         for user in user_excel_data_id:
             try:
-                if user == 5502797471:
-                    a = 9/0
                 await self.client.send_message(int(user), message_text)
                 await asyncio.sleep(random.randrange(1, 4))
                 user_excel_data['sending_report'].append(True)
