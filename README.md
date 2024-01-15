@@ -11,10 +11,25 @@ Quick Start:
 4. pip install -r requirements.txt (install lybraries)
 5. app-env/scripts/activate (Windows); source app-env/bin/activate (Ubuntu)
 6. mkdir media -> cd media -> mkdir excel -> cd .. (make directory for Excel files storage)
-7. python -m main_start (run the app)
+7. go to https://t.me/BotFather and create the bot, copy the token for future
+8. go to https://my.telegram.org/ to get your telegram api_id and api_hash fo future
+9. mkdir settings and create config.ini
+>[TelegramProduction] \
+>api_id = 'your api_id' \
+>api_hash = 'your api_hash' \
+>username = 'username' -> it doesn't matter \
+> \
+>[Bot] \
+>token = "your bot token" \
+> \
+> [Admins] \
+>superuser = "telegram_id", "telegram_id", ...
+>
+9. python -m main_start (run the app)
+
+Enjoy)
 
 Stack:
 1. Telethon
 2. Aiogram
 3. Pandas
-4. 
