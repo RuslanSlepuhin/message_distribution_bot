@@ -8,8 +8,8 @@ Quick Start:
 1. git clone url
 2. cd message_distribution_bot
 3. python venv app-env (create the virtual environment)
-4. pip install -r requirements.txt (install lybraries)
-5. app-env/scripts/activate (Windows); source app-env/bin/activate (Ubuntu)
+4. app-env/scripts/activate (Windows); source app-env/bin/activate (Ubuntu)
+5. pip install -r requirements.txt (install lybraries)
 6. mkdir media -> cd media -> mkdir excel -> cd .. (make directory for Excel files storage)
 7. go to https://t.me/BotFather and create the bot, copy the token for future
 8. go to https://my.telegram.org/ to get your telegram api_id and api_hash fo future
