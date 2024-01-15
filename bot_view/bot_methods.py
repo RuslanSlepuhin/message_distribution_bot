@@ -36,9 +36,12 @@ class Methods:
 
     async def get_external_subscribers(self, message, channel):
         teleth = TelethBot()
-        file_path = await teleth.get_subscribers(channel_name=channel)
-        print(file_path)
-        await self.send_file(message, file_path)
+        file_path, error = await teleth.get_subscribers(channel_name=channel)
+        if not error:
+            print(file_path)
+            await self.send_file(message, file_path)
+        else:
+            await self.main_class.bot.send_message(message.chat.id, f"Sorry, I can't do it cause:\n{str(error)}")
 
     async def send_file(self, message, file_path, caption=variables.caption_send_file):
         with open(file_path, 'rb') as file:

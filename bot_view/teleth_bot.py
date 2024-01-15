@@ -12,9 +12,10 @@ from telethon.tl.types import ChannelParticipantsSearch
 config = configparser.ConfigParser()
 config.read("./settings/config.ini")
 
-api_id = config['Telegram']['api_id']
-api_hash = config['Telegram']['api_hash']
-username = config['Telegram']['username']
+key_telegram = variables.key_telegram_config
+api_id = config[key_telegram]['api_id']
+api_hash = config[key_telegram]['api_hash']
+username = config[key_telegram]['username']
 
 class TelethBot:
 
@@ -22,9 +23,15 @@ class TelethBot:
         self.client = TelegramClient(username, int(api_id), api_hash)
         with self.client:
             self.client.loop.run_until_complete(self.create_new_session())
+        # await self.client.connect()
+        # print("telethon telegram account was started")
+        # self.client.disconnect()
 
     async def create_new_session(self):
-        await self.client.connect()
+        try:
+            await self.client.start()
+        except ConnectionError:
+            print('Failed to establish a connection with Telegram')
         print("telethon telegram account was started")
         await self.client.disconnect()
 
@@ -38,15 +45,18 @@ class TelethBot:
         limit_user = 100
         participants_list = []
         while True:
-            participants = await self.client(GetParticipantsRequest(channel, filter_user, offset_user, limit_user, hash=0))
-            offset_user += limit_user
-            print(offset_user)
-            if not participants.users:
-                break
-            participants_list.extend(participants.users)
+            try:
+                participants = await self.client(GetParticipantsRequest(channel, filter_user, offset_user, limit_user, hash=0))
+                offset_user += limit_user
+                print(offset_user)
+                if not participants.users:
+                    break
+                participants_list.extend(participants.users)
+            except Exception as ex:
+                return '', str(ex)
         file_full_path = await self.prepare_excel_dict_data(participants_list, variables.telegram_fields, channel_name.split("/")[-1])
         await self.client.disconnect()
-        return file_full_path
+        return file_full_path, None
 
     async def get_my_contacts(self) -> None:
         self.client = TelegramClient(username, int(api_id), api_hash)

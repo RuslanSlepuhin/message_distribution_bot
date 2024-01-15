@@ -10,7 +10,9 @@ def tg_bot_init():
 def teleth_bot_init():
     teleth_bot = TelethBot()
     teleth_bot.init_bot()
+    # loop.
+    # loop.run_until_complete(teleth_bot.init_bot())
 
 if __name__ == "__main__":
     teleth_bot_init()
-    tg_bot_init()
+    # tg_bot_init()
