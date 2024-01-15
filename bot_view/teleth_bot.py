@@ -23,9 +23,6 @@ class TelethBot:
         self.client = TelegramClient(username, int(api_id), api_hash)
         with self.client:
             self.client.loop.run_until_complete(self.create_new_session())
-        # await self.client.connect()
-        # print("telethon telegram account was started")
-        # self.client.disconnect()
 
     async def create_new_session(self):
         try:
@@ -86,24 +83,6 @@ class TelethBot:
                 pass
             pass
         return await write_to_excel(user_excel_data, file_name)
-
-    # async def write_to_excel(self, user_excel_data, file_name, path="media/excel/") -> None:
-    #     df = pd.DataFrame(
-    #         {
-    #             'id': user_excel_data['id'],
-    #             'access_hash': user_excel_data['access_hash'],
-    #             'username': user_excel_data['username'],
-    #             'first_name': user_excel_data['first_name'],
-    #             'last_name': user_excel_data['last_name'],
-    #             'mutual_contact': user_excel_data['mutual_contact'],
-    #             'phone': user_excel_data['phone'],
-    #         }
-    #     )
-    #     file_name = "data.xlsx" if not file_name else file_name + ".xlsx"
-    #     file_full_path = path + file_name
-    #     df.to_excel(file_full_path, sheet_name='Sheet1')
-    #     print(f'\nExcel was writting')
-    #     return file_full_path
 
     async def pull_message_to_users(self, user_excel_data, message_text:str) -> [bool, dict]:
         self.client = TelegramClient(username, int(api_id), api_hash)
