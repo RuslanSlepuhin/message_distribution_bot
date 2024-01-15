@@ -17,7 +17,7 @@ Quick Start:
 >[TelegramProduction] \
 >api_id = 'your api_id' \
 >api_hash = 'your api_hash' \
->username = 'username' -> it doesn't matter \
+>username = 'username' -> The value doesn't matter \
 > \
 >[Bot] \
 >token = "your bot token" \
