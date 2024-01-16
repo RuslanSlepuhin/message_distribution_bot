@@ -58,6 +58,10 @@ class HorecaBot:
             text = "Меню Суперюзера"
             self.callbacks = await self.methods.send_message_inline_keyboard(message, buttons=variables.superuser_start_buttons, text=text, row=1)
 
+        @self.dp.message_handler(commands=['report'])
+        async def report(message: types.Message):
+            await self.methods.send_file(message, "./media/excel/sending_report.xlsx")
+
         @self.dp.callback_query_handler()
         async def callbacks(callback: types.CallbackQuery):
             if callback.data in self.callbacks:
