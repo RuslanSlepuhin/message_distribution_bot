@@ -21,8 +21,13 @@ class TelethBot:
 
     def init_bot(self):
         self.client = TelegramClient(username, int(api_id), api_hash)
-        with self.client:
-            self.client.loop.run_until_complete(self.create_new_session())
+        self.client.start()
+        pass
+
+    # def init_bot(self):
+    #     self.client = TelegramClient(username, int(api_id), api_hash)
+    #     with self.client:
+    #         self.client.loop.run_until_complete(self.create_new_session())
 
     async def create_new_session(self):
         try:

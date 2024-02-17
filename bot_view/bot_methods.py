@@ -31,8 +31,9 @@ class Methods:
     async def send_message_inline_keyboard(self, message, buttons, text, **kwargs):
         row = kwargs['row'] if kwargs.get('row') else None
         markup, callbacks = await self.inline_markup(buttons, row=row)
-        await self.main_class.bot.send_message(message.chat.id, text, reply_markup=markup)
-        return callbacks
+        return markup, callbacks
+        # await self.main_class.bot.send_message(message.chat.id, text, reply_markup=markup)
+        # return callbacks
 
     async def get_external_subscribers(self, message, channel):
         teleth = TelethBot()

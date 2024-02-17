@@ -3,6 +3,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils import executor
 from bot_view.bot_methods import Methods
 from variables import variables
@@ -10,7 +11,7 @@ from variables import variables
 config = configparser.ConfigParser()
 config.read("./settings/config.ini")
 
-class HorecaBot:
+class DisributionBot:
 
     def __init__(self, token=None):
         self.token = token if token else config['Bot']['token']
@@ -31,6 +32,18 @@ class HorecaBot:
         distribution_message = State()
 
     def bot_handlers(self):
+
+        @self.dp.callback_query_handler()
+        async def callbacks_data(callback: types.CallbackQuery):
+            pass
+            if callback.data in self.callbacks:
+                match callback.data:
+                    case "get_external_subscribers": await self.get_external_subscribers(callback.message)
+                    case "get_own_contacts": await self.methods.get_own_contacts(callback.message)
+                    case "distribution":
+                        await self.bot.send_message(callback.message.chat.id, variables.distribution_message)
+                        self.receive_distribution_excel = True
+
 
         @self.dp.message_handler(state=self.DistributionMessageForm.distribution_message)
         async def distribution_message(message: types.Message, state: FSMContext):
@@ -55,22 +68,18 @@ class HorecaBot:
 
         @self.dp.message_handler(commands=['start'])
         async def start(message: types.Message):
+            # markup = InlineKeyboardMarkup()
+            # button = InlineKeyboardButton('kuku', callback_data='kukuku')
+            # markup.add(button)
+            # await self.bot.send_message(message.chat.id, "rere", reply_markup=markup)
+
             text = "Меню Суперюзера"
-            self.callbacks = await self.methods.send_message_inline_keyboard(message, buttons=variables.superuser_start_buttons, text=text, row=1)
+            markup, self.callbacks = await self.methods.send_message_inline_keyboard(message, buttons=variables.superuser_start_buttons, text=text, row=3)
+            await self.bot.send_message(message.chat.id, text, reply_markup=markup)
 
         @self.dp.message_handler(commands=['report'])
         async def report(message: types.Message):
             await self.methods.send_file(message, "./media/excel/sending_report.xlsx")
-
-        @self.dp.callback_query_handler()
-        async def callbacks(callback: types.CallbackQuery):
-            if callback.data in self.callbacks:
-                match callback.data:
-                    case "get_external_subscribers": await self.get_external_subscribers(callback.message)
-                    case "get_own_contacts": await self.methods.get_own_contacts(callback.message)
-                    case "distribution":
-                        await self.bot.send_message(callback.message.chat.id, variables.distribution_message)
-                        self.receive_distribution_excel = True
 
         @self.dp.message_handler(content_types=['document'])
         async def download_doc(message: types.Message):
