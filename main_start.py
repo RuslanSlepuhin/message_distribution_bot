@@ -19,15 +19,15 @@ def your_coffee_bot():
     coffee_bot.bot_handlers()
 
 if __name__ == "__main__":
-    # process0 = Process(target=teleth_bot_init)
-    # process0.start()
-    # process0.join()
+    process0 = Process(target=teleth_bot_init)
+    process0.start()
+    process0.join()
 
     # process1 = Process(target=tg_bot_init)
-    process2 = Process(target=your_coffee_bot)
+    # process2 = Process(target=your_coffee_bot)
 
     # process1.start()
-    process2.start()
+    # process2.start()
 
     # process1.join()
-    process2.join()
+    # process2.join()
