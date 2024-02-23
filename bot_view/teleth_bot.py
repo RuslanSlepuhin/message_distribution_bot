@@ -117,5 +117,7 @@ class TelethBot:
         await self.client.disconnect()
         return True, user_excel_data
 
-
+if __name__ == '__main__':
+    t = TelethBot()
+    t.init_bot()
 

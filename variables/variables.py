@@ -17,4 +17,4 @@ distribution_was_broken = "УПС, что-то пошло не так, обра�
 sending_report_file_name = "sending_report"
 sending_limit_counter_limit = 20
 sending_limit_counter_sleep = 15
-key_telegram_config = "Telegram" # TelegramProduction, Telegram
+key_telegram_config = "TelegramProduction" # TelegramProduction, Telegram
